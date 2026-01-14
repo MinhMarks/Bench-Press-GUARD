@@ -17,7 +17,7 @@ This project uses MediaPipe Pose Estimation and OpenCV to detect dangerous situa
 1.  **Clone the repository**:
     ```bash
     git clone https://github.com/yourusername/bench-press-guard.git
-    cd bench-press-guard
+    cd <project-folder>
     ```
 
 2.  **Install dependencies**:
@@ -37,7 +37,7 @@ python main.py
 ### 2. Video File Demo
 Run the detection on a video file. The system will auto-throttle playback to match the video's FPS.
 ```bash
-python main.py --video "path/to/video.mp4"
+python main.py --video "v4.www-y2mate.blog - Swiss Bar Bench Press (360p).mp4"
 ```
 
 ### 3. Controls & Interaction
