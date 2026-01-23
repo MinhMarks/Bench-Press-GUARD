@@ -1,0 +1,234 @@
+/*
+Professional dark theme stylesheet for BenchGuard Pro
+*/
+
+/* Main Window */
+QMainWindow {
+    background-color: #1a1a1a;
+}
+
+QWidget {
+    color: #ffffff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10pt;
+}
+
+/* Menu Bar */
+QMenuBar {
+    background-color: #2d2d2d;
+    border-bottom: 1px solid #4a4a4a;
+    padding: 4px;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+QMenuBar::item:selected {
+    background-color: #00c9ff;
+}
+
+QMenu {
+    background-color: #2d2d2d;
+    border: 1px solid #4a4a4a;
+}
+
+QMenu::item {
+    padding: 8px 30px;
+}
+
+QMenu::item:selected {
+    background-color: #00c9ff;
+}
+
+/* Status Bar */
+QStatusBar {
+    background-color: #2d2d2d;
+    border-top: 1px solid #4a4a4a;
+    color: #b0b0b0;
+}
+
+/* Panels */
+QWidget#settingsPanel {
+    background-color: #2d2d2d;
+    border-right: 1px solid #4a4a4a;
+}
+
+QWidget#videoPanel {
+    background-color: #1a1a1a;
+}
+
+/* Labels */
+QLabel {
+    color: #ffffff;
+}
+
+QLabel#titleLabel {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #00c9ff;
+}
+
+QLabel#sectionLabel {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #b0b0b0;
+    padding: 8px 0px;
+}
+
+/* Buttons */
+QPushButton {
+    background-color: #00c9ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+QPushButton:hover {
+    background-color: #00a8d8;
+}
+
+QPushButton:pressed {
+    background-color: #008ab8;
+}
+
+QPushButton:disabled {
+    background-color: #4a4a4a;
+    color: #808080;
+}
+
+QPushButton#dangerButton {
+    background-color: #ff1744;
+}
+
+QPushButton#dangerButton:hover {
+    background-color: #d50032;
+}
+
+QPushButton#successButton {
+    background-color: #00e676;
+}
+
+QPushButton#successButton:hover {
+    background-color: #00c956;
+}
+
+/* Radio Buttons */
+QRadioButton {
+    spacing: 8px;
+    color: #ffffff;
+}
+
+QRadioButton::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    border: 2px solid #4a4a4a;
+    background-color: #2d2d2d;
+}
+
+QRadioButton::indicator:checked {
+    background-color: #00c9ff;
+    border-color: #00c9ff;
+}
+
+/* Combo Boxes */
+QComboBox {
+    background-color: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    padding: 6px 12px;
+    color: #ffffff;
+}
+
+QComboBox:hover {
+    border-color: #00c9ff;
+}
+
+QComboBox::drop-down {
+    border: none;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #2d2d2d;
+    border: 1px solid #4a4a4a;
+    selection-background-color: #00c9ff;
+    color: #ffffff;
+}
+
+/* Line Edit */
+QLineEdit {
+    background-color: #3a3a3a;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    padding: 8px 12px;
+    color: #ffffff;
+}
+
+QLineEdit:focus {
+    border-color: #00c9ff;
+}
+
+/* Group Box */
+QGroupBox {
+    border: 2px solid #4a4a4a;
+    border-radius: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    font-weight: bold;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 4px;
+    color: #00c9ff;
+}
+
+/* Scroll Bar */
+QScrollBar:vertical {
+    background-color: #2d2d2d;
+    width: 12px;
+    border-radius: 6px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #4a4a4a;
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: #00c9ff;
+}
+
+/* Cards */
+.bench-card {
+    background-color: #3a3a3a;
+    border-radius: 8px;
+    border: 1px solid #4a4a4a;
+    padding: 12px;
+}
+
+.bench-card-danger {
+    border-color: #ff1744;
+    background-color: rgba(255, 23, 68, 0.1);
+}
+
+.bench-card-normal {
+    border-color: #00e676;
+    background-color: rgba(0, 230, 118, 0.1);
+}
+
+/* Tooltips */
+QToolTip {
+    background-color: #2d2d2d;
+    color: #ffffff;
+    border: 1px solid #4a4a4a;
+    padding: 4px;
+}

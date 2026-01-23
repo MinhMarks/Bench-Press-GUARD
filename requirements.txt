@@ -1,3 +1,14 @@
-opencv-python
-mediapipe
-numpy
+# Core Dependencies
+opencv-python>=4.8.0
+numpy>=1.24.0
+ultralytics>=8.0.0
+
+# GUI Framework
+PyQt6>=6.5.0
+
+# Optional (already installed for future features)
+Pillow>=10.0.0
+pygame>=2.5.0
+
+# Development
+# pytest>=7.4.0  # Uncomment for testing

@@ -13,6 +13,22 @@ env/
 *.csv
 bench_press_log.csv
 
+# Large model files (download separately)
+*.pt
+*.onnx
+*.pth
+checkpoints/
+
+# Video files (use your own for testing)
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Documents and reports
+*.pdf
+demo_section.tex
+
 # IDEs
 .vscode/
 .idea/
@@ -20,3 +36,8 @@ bench_press_log.csv
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

@@ -4,11 +4,13 @@ import signal
 import sys
 import argparse
 from config import *
+from config import BENCH_COLORS  # Explicit import for multi-ROI
 from core.camera import CameraStream
 from core.detector import PoseDetector
 from core.analyzer import BenchPressAnalyzer
 from core.logger import FailureLogger
 from utils.visualization import draw_roi, draw_info
+from utils.animation_utils import DangerAnimator
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C! Exiting...')
@@ -20,10 +22,19 @@ def main():
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Bench Press Guard')
     parser.add_argument('--video', type=str, help='Path to video file for demo mode')
+    parser.add_argument('--detector', type=str, default=DETECTOR_TYPE, 
+                        choices=['mediapipe', 'yolo'], 
+                        help='Pose detector to use')
+    parser.add_argument('--device', type=str, default=GPU_DEVICE,
+                        help='Device for inference: cuda:0 or cpu')
     args = parser.parse_args()
 
     # 1. Initialize System
-    print("Initializing Bench Press Guard...")
+    print("="*60)
+    print("Initializing Bench Press Guard")
+    print("="*60)
+    print(f"Detector: {args.detector.upper()}")
+    print(f"Device: {args.device}")
     
     # Determine source
     # Check if args.video is a digit (camera index) or path
@@ -37,62 +48,123 @@ def main():
 
     # Initialize components
     camera = CameraStream(src=source, width=CAMERA_WIDTH, height=CAMERA_HEIGHT).start()
-    detector = PoseDetector(detection_con=0.7, track_con=0.7)
+    
+    # Initialize detector based on selection
+    if args.detector == 'yolo':
+        from core.detector_yolo import YOLOPoseDetector
+        detector = YOLOPoseDetector(model_size=YOLO_MODEL_SIZE, device=args.device)
+    else:  # mediapipe
+        detector = PoseDetector(detection_con=0.7, track_con=0.7)
     
     # Wait for camera to warm up
     time.sleep(2.0)
     
-    # --- ROI Selection ---
-    print("Please select the Bench Press area on the window...")
-    first_frame = None
-    # Retry getting frame a few times if slow start
-    for _ in range(10):
-        first_frame = camera.read()
-        if first_frame is not None:
-            break
-        time.sleep(0.1)
-        
-    if first_frame is None:
-        print("Error: Could not read frame from camera/video.")
-        return
-
-    # User selects ROI
-    # cv2.selectROI returns (x, y, w, h)
-    # create a named window to ensure it pops up
-    cv2.namedWindow("Select Bench Area", cv2.WINDOW_NORMAL)
-    r = cv2.selectROI("Select Bench Area", first_frame, fromCenter=False, showCrosshair=True)
-    cv2.destroyWindow("Select Bench Area")
+    # --- Multi-ROI Selection ---
+    print("="*60)
+    print("Select bench press areas (one at a time)")
+    print("Press ESC after selecting all benches to continue")
+    print("="*60)
     
-    # If user cancelled (w=0 or h=0), use default or exit? 
-    # Let's fallback to default/full screen if invalid
-    if r[2] == 0 or r[3] == 0:
-        print("No ROI selected. Using default/full screen configurations.")
-        selected_roi = DEFAULT_ROI
-    else:
-        h, w, c = first_frame.shape
+    rois = []
+    bench_count = 0
+    
+    while True:
+        # Get fresh frame for selection
+        first_frame = None
+        for _ in range(10):
+            first_frame = camera.read()
+            if first_frame is not None:
+                break
+            time.sleep(0.1)
+        
+        if first_frame is None:
+            print("Error: Could not read frame from camera/video.")
+            return
+        
+        # Draw existing ROIs on frame for reference
+        display_frame = first_frame.copy()
+        h, w, _ = display_frame.shape
+        for idx, roi in enumerate(rois):
+            x = int(roi['x'] * w)
+            y = int(roi['y'] * h)
+            roi_w = int(roi['w'] * w)
+            roi_h = int(roi['h'] * h)
+            color = BENCH_COLORS[idx % len(BENCH_COLORS)]
+            cv2.rectangle(display_frame, (x, y), (x + roi_w, y + roi_h), color, 3)
+            cv2.putText(display_frame, f"Bench #{idx + 1}", (x, y - 10),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+        
+        # Prompt user
+        if bench_count == 0:
+            window_title = "Select Bench #1 (ESC to skip)"
+        else:
+            window_title = f"Select Bench #{bench_count + 1} or ESC to finish"
+        
+        cv2.namedWindow(window_title, cv2.WINDOW_NORMAL)
+        r = cv2.selectROI(window_title, display_frame, fromCenter=False, showCrosshair=True)
+        cv2.destroyWindow(window_title)
+        
+        # Check if selection was cancelled (ESC pressed)
+        if r[2] == 0 or r[3] == 0:
+            if bench_count == 0:
+                print("No benches selected. Using default single bench.")
+                # Use default ROI
+                rois.append(DEFAULT_ROI)
+                bench_count = 1
+            else:
+                print(f"Finished selecting {bench_count} benches.")
+            break
+        
+        # Normalize and store ROI
         selected_roi = {
             "x": r[0] / w,
             "y": r[1] / h,
             "w": r[2] / w,
             "h": r[3] / h
         }
-        print(f"ROI Selected: {selected_roi}")
-
-    # Support multiple benches (ROIs)
-    benches = [
-        {
-            "id": 1,
-            "roi": selected_roi,
-            "analyzer": BenchPressAnalyzer(fps=TARGET_FPS)
-        }
-    ]
+        rois.append(selected_roi)
+        bench_count += 1
+        print(f"Bench #{bench_count} selected: {selected_roi}")
+        
+        # Limit to 6 benches
+        if bench_count >= 6:
+            print("Maximum 6 benches reached.")
+            break
+    
+    # CRITICAL FIX: Restart video stream to reset from beginning
+    print(f"[DEBUG] camera.is_file = {camera.is_file}")
+    if camera.is_file:
+        print("[INFO] Restarting video stream...")
+        camera.stop()
+        print("[DEBUG] Camera stopped")
+        time.sleep(0.5)
+        camera = CameraStream(src=source, width=CAMERA_WIDTH, height=CAMERA_HEIGHT).start()
+        print("[DEBUG] Camera restarted")
+        time.sleep(1.0)
+        print("[DEBUG] Ready to process")
+    
+    # Build benches list with unique colors
+    benches = []
+    for idx, roi in enumerate(rois):
+        benches.append({
+            "id": idx + 1,
+            "roi": roi,
+            "analyzer": BenchPressAnalyzer(fps=TARGET_FPS),
+            "color": BENCH_COLORS[idx % len(BENCH_COLORS)]
+        })
+    
+    print(f"Monitoring {len(benches)} bench(es)")
     
     logger = FailureLogger()
+    
+    # Initialize animations
+    danger_animator = DangerAnimator()
     
     print("System Active. Press 'q' to quit.")
 
     prev_frame_time = 0
     show_debug = False
+    playback_speed = 1.0  # Speed control
     
     while True:
         # Loop start time
@@ -137,28 +209,65 @@ def main():
             lm_list = detector.find_position(roi_img)
             
             # Draw Debug if enabled
-            if show_debug and detector.results.pose_landmarks:
-                # Create a view into display_frame to draw on it
-                roi_display = display_frame[r_y:r_y+r_h, r_x:r_x+r_w]
-                detector.mp_draw.draw_landmarks(roi_display, detector.results.pose_landmarks, detector.mp_pose.POSE_CONNECTIONS)
+            if show_debug:
+                # Check detector type and draw accordingly
+                if args.detector == 'yolo':
+                    # YOLO: Draw keypoints manually
+                    if lm_list and len(lm_list) > 0:
+                        roi_display = display_frame[r_y:r_y+r_h, r_x:r_x+r_w]
+                        
+                        # Draw skeleton connections (COCO format)
+                        connections = [
+                            (5, 6), (5, 7), (7, 9), (6, 8), (8, 10),  # Arms
+                            (5, 11), (6, 12), (11, 12),  # Torso
+                            (11, 13), (13, 15), (12, 14), (14, 16)  # Legs
+                        ]
+                        
+                        # Draw connections
+                        for conn in connections:
+                            if conn[0] < len(lm_list) and conn[1] < len(lm_list):
+                                p1 = lm_list[conn[0]]
+                                p2 = lm_list[conn[1]]
+                                if p1['visibility'] > 0.3 and p2['visibility'] > 0.3:
+                                    cv2.line(roi_display, 
+                                            (p1['x_px'], p1['y_px']),
+                                            (p2['x_px'], p2['y_px']),
+                                            (0, 255, 255), 2)
+                        
+                        # Draw keypoints
+                        for landmark in lm_list:
+                            if landmark['visibility'] > 0.3:
+                                cv2.circle(roi_display, 
+                                          (landmark['x_px'], landmark['y_px']),
+                                          4, (0, 255, 0), -1)
+                                cv2.circle(roi_display,
+                                          (landmark['x_px'], landmark['y_px']),
+                                          6, (255, 255, 255), 1)
+                        
+                        # Draw Barbell Line
+                        barbell = bench['analyzer']._extract_barbell(lm_list)
+                        if barbell:
+                            p1 = (barbell['left']['x_px'], barbell['left']['y_px'])
+                            p2 = (barbell['right']['x_px'], barbell['right']['y_px'])
+                            cv2.line(roi_display, p1, p2, (255, 0, 255), 4)
+                            cv2.circle(roi_display, p1, 8, (255, 0, 255), -1)
+                            cv2.circle(roi_display, p2, 8, (255, 0, 255), -1)
                 
-                # Draw Barbell Line specifically
-                barbell = bench['analyzer']._extract_barbell(lm_list)
-                if barbell:
-                    # coords are normalized to ROI, need pixel relative to ROI
-                    # actually lm_list has x_px, y_px relative to ROI image size
-                    # we can just use those points
-                   
-                    # Accessing dictionary items from lm_list, but lm_list is list of dicts?
-                    # Detector.find_position returns list of dicts.
-                    # analyzer._extract_barbell returns dict with 'left', 'right' which are items from lm_list
-                    
-                    p1 = (barbell['left']['x_px'], barbell['left']['y_px'])
-                    p2 = (barbell['right']['x_px'], barbell['right']['y_px'])
-                    
-                    cv2.line(roi_display, p1, p2, (255, 255, 0), 3) # Cyan line for barbell
-                    cv2.circle(roi_display, p1, 5, (255, 0, 255), -1)
-                    cv2.circle(roi_display, p2, 5, (255, 0, 255), -1)
+                else:  # MediaPipe
+                    if hasattr(detector, 'results') and detector.results and hasattr(detector.results, 'pose_landmarks'):
+                        if detector.results.pose_landmarks:
+                            roi_display = display_frame[r_y:r_y+r_h, r_x:r_x+r_w]
+                            detector.mp_draw.draw_landmarks(roi_display, detector.results.pose_landmarks, 
+                                                           detector.mp_pose.POSE_CONNECTIONS)
+                            
+                            # Draw Barbell Line
+                            barbell = bench['analyzer']._extract_barbell(lm_list)
+                            if barbell:
+                                p1 = (barbell['left']['x_px'], barbell['left']['y_px'])
+                                p2 = (barbell['right']['x_px'], barbell['right']['y_px'])
+                                cv2.line(roi_display, p1, p2, (255, 0, 255), 4)
+                                cv2.circle(roi_display, p1, 8, (255, 0, 255), -1)
+                                cv2.circle(roi_display, p2, 8, (255, 0, 255), -1)
 
             # 4. Analyze State
             state, reason = bench['analyzer'].analyze(lm_list)
@@ -166,7 +275,13 @@ def main():
             # 5. Log
             logger.log(bench['id'], state, reason, camera.get_latency())
             
-            # 6. Visualize
+            # 6. Animate danger if needed
+            if state == "DANGER":
+                display_frame = danger_animator.animate_danger_pulse(display_frame, roi_def, intensity=0.4)
+            else:
+                danger_animator.reset()
+            
+            # 7. Visualize
             # Pass usage info or reason
             draw_roi(display_frame, roi_def, state, reason if state == "DANGER" else "")
         
@@ -180,26 +295,41 @@ def main():
             "System FPS": f"{int(fps)}",
             "Latency": f"{int(camera.get_latency()*1000)}ms",
             "Status": "Monitoring" if not any(b['analyzer'].state == "DANGER" for b in benches) else "DANGER DETECTED",
-            "Debug (d)": "ON" if show_debug else "OFF"
+            "Debug (d)": "ON" if show_debug else "OFF",
+            "Detector": args.detector.upper(),
+            "Speed": f"{playback_speed:.1f}x"
         }
         
-        from utils.visualization import draw_dashboard
-        draw_dashboard(display_frame, stats)
+        # Create dashboard panel (LEFT) and combine with video (RIGHT)
+        from utils.visualization import create_dashboard_panel
+        h, w, _ = display_frame.shape
+        dashboard_panel = create_dashboard_panel(stats, h, width=400)
+        combined_frame = cv2.hconcat([dashboard_panel, display_frame])
         
-        # Show
-        cv2.imshow("Bench Press Guard", display_frame)
+        # Show combined view
+        cv2.imshow("Bench Press Guard", combined_frame)
         
-        # Wait Key (Sleep to match Target FPS?)
-        # Simple loop limiter
-        process_time = time.time() - start_time
-        wait_ms = max(1, int((1.0/TARGET_FPS - process_time) * 1000))
-        
-        key = cv2.waitKey(wait_ms) & 0xFF
+        # 9. Keyboard Controls  
+        key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
         elif key == ord('d'):
             show_debug = not show_debug
-
+            print(f"Debug mode: {'ON' if show_debug else 'OFF'}")
+        elif key == 82 or key == ord('+'):  # Up arrow or +
+            playback_speed = min(playback_speed + 0.1, 3.0)
+            print(f"Speed: {playback_speed:.1f}x")
+        elif key == 84 or key == ord('-'):  # Down arrow or -  
+            playback_speed = max(playback_speed - 0.1, 0.1)
+            print(f"Speed: {playback_speed:.1f}x")
+        elif key == ord('r'):  # Reset speed
+            playback_speed = 1.0
+            print(f"Speed reset to 1.0x")
+        
+        # Apply playback speed (delay for slow motion)
+        if camera.is_file and playback_speed < 1.0:
+            delay_time = (1.0 / TARGET_FPS) * (1.0 / playback_speed)
+            time.sleep(max(0, delay_time - (time.time() - start_time)))
     camera.stop()
     cv2.destroyAllWindows()
 

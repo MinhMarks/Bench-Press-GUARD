@@ -50,8 +50,8 @@ class BenchPressAnalyzer:
         self.history.add(current_data)
         
         # 1. Check Loss of Stability (Immediate)
-        if current_data['tilt'] > DANGER_TILT_ANGLE:
-            return self.update_state("DANGER", f"Unstable: Tilt {current_data['tilt']:.1f} > {DANGER_TILT_ANGLE}", current_time)
+        if current_data['tilt'] > TILT_THRESHOLD:
+            return self.update_state("DANGER", f"Unstable: Tilt {current_data['tilt']:.1f} > {TILT_THRESHOLD}", current_time)
             
         # Check X-axis Shake (last 1 sec)
         shake = self._calculate_shake(1.0)
