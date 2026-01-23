@@ -8,7 +8,7 @@
 **Professional Bench Press Safety Monitoring System** - Hệ thống giám sát an toàn bench press sử dụng AI với giao diện desktop chuyên nghiệp dành cho phòng gym.
 
 <p align="center">
-  <img src="assets/image/Screenshot2026-01-23 075001.png" alt="Main Interface" width="750"/>
+  <img src="image/Screenshot2026-01-23 075001.png" alt="Main Interface" width="750"/>
 </p>
 
 
@@ -175,7 +175,7 @@ GymerGaurd/
 
 ### 1. Main Interface - Giao diện chính
 <p align="center">
-  <img src="assets/image/Screenshot2026-01-23 075001.png" alt="Main Interface" width="750"/>
+  <img src="image/Screenshot2026-01-23 075001.png" alt="Main Interface" width="750"/>
 </p>
 
 Settings panel (trái) + Video display (phải) với dark theme chuyên nghiệp
@@ -184,7 +184,7 @@ Settings panel (trái) + Video display (phải) với dark theme chuyên nghiệ
 
 ### 2. Multi-Bench Monitoring - Giám sát đa bench
 <p align="center">
-  <img src="assets/image/Screenshot 2026-01-22 184025.png" alt="Monitoring Active" width="750"/>
+  <img src="image/Screenshot 2026-01-22 184025.png" alt="Monitoring Active" width="750"/>
 </p>
 
 Real-time monitoring với ROI overlays màu sắc + status cards cho từng bench
@@ -193,7 +193,7 @@ Real-time monitoring với ROI overlays màu sắc + status cards cho từng ben
 
 ### 3. PIP Danger Mode - Chế độ cảnh báo nguy hiểm
 <p align="center">
-  <img src="assets/image/Screenshot 2026-01-22 183932.png" alt="PIP Mode" width="750"/>
+  <img src="image/Screenshot 2026-01-22 183932.png" alt="PIP Mode" width="750"/>
 </p>
 
 Auto-zoom vào vùng nguy hiểm + PIP thumbnail toàn cảnh + keypoints debug
