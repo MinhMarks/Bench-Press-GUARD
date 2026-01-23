@@ -7,6 +7,11 @@
 
 **Professional Bench Press Safety Monitoring System** - Hệ thống giám sát an toàn bench press sử dụng AI với giao diện desktop chuyên nghiệp dành cho phòng gym.
 
+<p align="center">
+  <img src="assets/image/Screenshot2026-01-23 075001.png" alt="Main Interface" width="750"/>
+</p>
+
+
 > ⚡ **v2.0**: Hoàn toàn mới với GUI PyQt6, multi-bench monitoring, và PIP mode
 
 ## ✨ Features
@@ -168,27 +173,33 @@ GymerGaurd/
 
 ## 🎨 Screenshots
 
-### Main Interface
-![Main Interface](assets/screenshots/main_interface.png)
-*Giao diện chính với settings panel và video display*
+### 1. Main Interface - Giao diện chính
+<p align="center">
+  <img src="assets/image/Screenshot2026-01-23 075001.png" alt="Main Interface" width="750"/>
+</p>
 
-### ROI Selection
-![ROI Wizard](assets/screenshots/roi_wizard.png)
-*Interactive ROI selection với multi-bench support*
+Settings panel (trái) + Video display (phải) với dark theme chuyên nghiệp
 
-### Monitoring Active
-![Monitoring](assets/screenshots/monitoring_active.png)
-*Real-time monitoring với status cards*
+---
 
-### PIP Mode
-![PIP Mode](assets/screenshots/pip_danger.png)
-*Auto-zoom khi phát hiện DANGER với thumbnail toàn cảnh*
+### 2. Multi-Bench Monitoring - Giám sát đa bench
+<p align="center">
+  <img src="assets/image/Screenshot 2026-01-22 184025.png" alt="Monitoring Active" width="750"/>
+</p>
 
-### Keypoint Debug
-![Keypoints](assets/screenshots/keypoints_debug.png)
-*Debug mode hiển thị 17 COCO keypoints + skeleton*
+Real-time monitoring với ROI overlays màu sắc + status cards cho từng bench
 
-> 📸 Screenshots sẽ được cập nhật sau khi hoàn thiện testing
+---
+
+### 3. PIP Danger Mode - Chế độ cảnh báo nguy hiểm
+<p align="center">
+  <img src="assets/image/Screenshot 2026-01-22 183932.png" alt="PIP Mode" width="750"/>
+</p>
+
+Auto-zoom vào vùng nguy hiểm + PIP thumbnail toàn cảnh + keypoints debug
+
+---
+
 
 ## 🔧 Development
 
